@@ -1,4 +1,4 @@
-"""LDA and LSA on the most positive and the most negative tweet of the event sessions, reported in the appendix."""
+"""LDA and LSA of Appendix B on the tweets of Figure 3, each session's most extreme."""
 import re
 import string
 
@@ -6,15 +6,14 @@ import numpy as np
 import pandas as pd
 from gensim.corpora import Dictionary
 from gensim.models import CoherenceModel
-from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from sklearn.decomposition import LatentDirichletAllocation, TruncatedSVD
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.manifold import TSNE
 
 import config
+from tweets import STOP
 
-STOP = set(stopwords.words("english")) | set(config.STOPWORDS_EXTRA)
 LEMMA = WordNetLemmatizer()
 
 
@@ -24,20 +23,19 @@ def lemmatize(word):
 
 
 def clean(text):
-    """Lower case, punctuation, digits and stop words removed, words lemmatized, stop words removed again
-    after lemmatizing."""
+    """Lower case, no punctuation, digits or stop words, lemmatized, stop words dropped again."""
     text = text.lower().translate(str.maketrans("", "", string.punctuation))
-    for ch in ["“", "”", "’"]:
+    for ch in ["“", "”", "’"]:  # noqa: RUF001
         text = text.replace(ch, " ")
-    text = text.replace("➡️", "").replace("american", "america").replace("united states", "america")
+    text = (text.replace("➡️", "").replace("american", "america")
+            .replace("united states", "america"))
     text = re.sub("[0-9]+", "", text)
     words = (lemmatize(w) for w in text.split() if w not in STOP)
     return " ".join(w for w in words if w not in STOP)
 
 
 def corpus(ext):
-    """Most negative tweet of each session with one at or below -THRESHOLD, then most positive tweet of each
-    session with one at or above THRESHOLD, each in session order."""
+    """Tweets of Figure 3, cleaned: the negative ones (<= -THRESHOLD) first, then the positive."""
     neg = ext.loc[ext["neg"] <= -config.THRESHOLD, "neg_text"]
     pos = ext.loc[ext["pos"] >= config.THRESHOLD, "pos_text"]
     return [clean(t) for t in pd.concat([neg, pos]).dropna()]
@@ -48,7 +46,8 @@ def key_words(dtm, vocab, labels, k):
     out = []
     for topic in range(k):
         counts = np.asarray(dtm[labels == topic].sum(axis=0)).ravel()
-        out.append([vocab[i] for i in np.argsort(counts)[::-1][:config.KEY_WORDS] if counts[i] > 0])
+        top = np.argsort(counts)[::-1][:config.KEY_WORDS]
+        out.append([vocab[i] for i in top if counts[i] > 0])
     return out
 
 
@@ -56,7 +55,8 @@ def fit(docs, k, model="lda"):
     vec = CountVectorizer(stop_words="english")
     dtm = vec.fit_transform(docs)
     if model == "lda":
-        est = LatentDirichletAllocation(n_components=k, learning_method="online", random_state=config.SEED)
+        est = LatentDirichletAllocation(n_components=k, learning_method="online",
+                                        random_state=config.SEED)
     else:
         est = TruncatedSVD(n_components=k, random_state=config.SEED)
     weights = est.fit_transform(dtm)
@@ -65,11 +65,11 @@ def fit(docs, k, model="lda"):
 
 
 def coherence(docs, words):
-    """c_v coherence of the key words of the topics that hold at least one document, over the tokenized
-    documents."""
+    """c_v coherence of the key words of the non-empty topics over the tokenized documents."""
     analyzer = CountVectorizer(stop_words="english").build_analyzer()
     texts = [analyzer(d) for d in docs]
-    return CoherenceModel(topics=[w for w in words if w], texts=texts, dictionary=Dictionary(texts), coherence="c_v").get_coherence()
+    return CoherenceModel(topics=[w for w in words if w], texts=texts,
+                          dictionary=Dictionary(texts), coherence="c_v").get_coherence()
 
 
 def scan(docs):

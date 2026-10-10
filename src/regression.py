@@ -12,15 +12,13 @@ def vix_change(prices):
 
 
 def event_regression(r, X):
-    """For each k in LAGS fit r_{t+k} = c + phi r_{t+k-1} + beta' X_t + u by OLS with Newey-West errors.
-
-    X is indexed by trading session t, sessions without tweets are zero. Every session enters where r_{t+k}
-    and r_{t+k-1} exist. Returns coefficients and p-values, one column per k."""
+    """Equation (3) or (5) for each k in LAGS, Newey-West OLS: coefficients and p-values."""
     index = X.index.union(r.index)
     r, X = r.reindex(index), X.reindex(index).fillna(0.0)
     coef, pval = {}, {}
     for k in config.LAGS:
-        df = pd.concat([r.shift(-k).rename("y"), r.shift(1 - k).rename("lag"), X], axis=1).dropna()
+        y, lag = r.shift(-k).rename("y"), r.shift(1 - k).rename("lag")
+        df = pd.concat([y, lag, X], axis=1).dropna()
         fit = sm.OLS(df["y"], sm.add_constant(df.drop(columns="y"))).fit(
             cov_type="HAC", cov_kwds={"maxlags": config.HAC_LAGS})
         coef[k], pval[k] = fit.params, fit.pvalues

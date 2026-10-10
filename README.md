@@ -12,9 +12,10 @@ Sessions with a tweet of extreme sentiment show a log change in the VIX 0.95% hi
 data/     committed tweets, prices, embeddings and topic labels
 src/      analysis modules, every parameter declared once in config.py
 report.pdf
+slides.pdf
 ```
 
-The report is distributed as a compiled PDF. Its typesetting source is not included.
+The report and slides are distributed as compiled PDFs. Their typesetting source is not included.
 
 ## Data
 
