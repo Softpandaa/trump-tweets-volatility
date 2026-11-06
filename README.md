@@ -4,7 +4,9 @@ This study examines the daily association between Donald Trump's tweets and the 
 
 ## Findings
 
-Sessions with a tweet of extreme sentiment show a log change in the VIX 0.95% higher than in other sessions, about 0.14 index points, but the difference does not extend to later sessions. Among the 19 topics extracted by BERTopic, only a few coefficients are significant, and their signs change across horizons. The tweets on the coronavirus came after the VIX had risen and those on election fraud came as it fell, which is consistent with tweets that comment on news rather than create it. Nevertheless, the response to a tweet can hardly be separated from the response to the news it comments on at a daily frequency. A natural extension is to work on an intraday dataset and test whether trading or hedging strategies triggered by the tweets are profitable.
+Sessions with a tweet of extreme sentiment, which also carry more tweets, show a log change in the VIX 0.95% higher than other sessions, about 0.14 index points at the median VIX. Coefficients of later sessions are not significant, and among the 19 BERTopic topics only a few are, with signs that change across horizons.
+
+Tweets on the coronavirus came after the VIX had risen and those on election fraud as it fell, consistent with tweets that comment on news rather than create it. At daily frequency, however, the response to a tweet can hardly be separated from the response to that news. Whether trading on the tweets pays is a question for intraday data.
 
 ## Layout
 
@@ -18,7 +20,7 @@ The report is distributed as a compiled PDF. Its typesetting source is not inclu
 
 ## Data
 
-`data/trump_tweets.csv` is the [Trump's Tweets](https://www.kaggle.com/datasets/rishidamarla/trumps-tweets) dataset of Damarla (2021) on Kaggle. `data/prices.csv` is the daily VIX close from Yahoo Finance over January 2016 to January 2021. `data/embeddings.npy` is the all-MiniLM-L6-v2 sentence embedding of each cleaned tweet from 2016, and `data/tweet_topics.csv` is the BERTopic topic of each tweet used in the report.
+`data/trump_tweets.csv` is the [Trump's Tweets](https://www.kaggle.com/datasets/rishidamarla/trumps-tweets) dataset of Damarla (2021) on Kaggle. `data/prices.csv` is the daily VIX close from Yahoo Finance for January 2016 to January 2021. `data/embeddings.npy` is the all-MiniLM-L6-v2 sentence embedding of each cleaned tweet from 2016 onward, and `data/tweet_topics.csv` is the BERTopic topic of each tweet, as fitted by `src/topics.py`.
 
 ## Reproducing
 
@@ -30,4 +32,4 @@ python -m nltk.downloader stopwords wordnet omw-1.4
 python src/plots.py
 ```
 
-This prints every number quoted in the report and writes the five figures it uses to `latex/figures/`, which is created on first run and is not tracked.
+This prints every number quoted in the report and draws its five figures.
